@@ -46,18 +46,6 @@ export const QuestionPaperPreview = (): JSX.Element => {
       {/* Main Content */}
       <main className="flex-1 p-4">
         <div className="max-w-4xl mx-auto">
-          {/* Action Buttons */}
-          <div className="flex justify-end gap-3 mb-6">
-            <Button variant="outline" className="flex items-center gap-2">
-              <DownloadIcon className="w-4 h-4" />
-              Download PDF
-            </Button>
-            <Button variant="outline" className="flex items-center gap-2">
-              <PrinterIcon className="w-4 h-4" />
-              Print
-            </Button>
-          </div>
-
           {/* Question Paper */}
           <Card className="bg-white shadow-lg">
             <CardContent className="p-8">
