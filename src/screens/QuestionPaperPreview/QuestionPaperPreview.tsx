@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { ArrowLeftIcon, DownloadIcon, ShareIcon, EditIcon, SaveIcon, XIcon, PlusIcon } from "lucide-react";
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
 import { Button } from "../../components/ui/button";
 import { Card, CardContent } from "../../components/ui/card";
 import { Input } from "../../components/ui/input";
@@ -212,6 +214,56 @@ export const QuestionPaperPreview = (): JSX.Element => {
       purple: "bg-purple-50 text-purple-800"
     };
     return colorMap[color as keyof typeof colorMap] || "bg-gray-50 text-gray-800";
+  };
+
+  const handleDownloadPDF = async () => {
+    const element = document.getElementById('question-paper-content');
+    if (!element) return;
+
+    try {
+      // Create canvas from the question paper content
+      const canvas = await html2canvas(element, {
+        scale: 2,
+        useCORS: true,
+        allowTaint: true,
+        backgroundColor: '#ffffff',
+        width: element.scrollWidth,
+        height: element.scrollHeight
+      });
+
+      const imgData = canvas.toDataURL('image/png');
+      
+      // Create PDF
+      const pdf = new jsPDF('p', 'mm', 'a4');
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = pdf.internal.pageSize.getHeight();
+      
+      const imgWidth = pdfWidth - 20; // 10mm margin on each side
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+      
+      let heightLeft = imgHeight;
+      let position = 10; // 10mm top margin
+      
+      // Add first page
+      pdf.addImage(imgData, 'PNG', 10, position, imgWidth, imgHeight);
+      heightLeft -= (pdfHeight - 20); // Account for margins
+      
+      // Add additional pages if needed
+      while (heightLeft >= 0) {
+        position = heightLeft - imgHeight + 10;
+        pdf.addPage();
+        pdf.addImage(imgData, 'PNG', 10, position, imgWidth, imgHeight);
+        heightLeft -= (pdfHeight - 20);
+      }
+      
+      // Generate filename
+      const filename = `${subject}_${displayClassName}_Question_Paper.pdf`;
+      pdf.save(filename);
+      
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      alert('Error generating PDF. Please try again.');
+    }
   };
 
   if (isEditing) {
@@ -439,7 +491,7 @@ export const QuestionPaperPreview = (): JSX.Element => {
       <main className="flex-1 p-4">
         <div className="max-w-4xl mx-auto">
           {/* Question Paper */}
-          <Card className="bg-white shadow-lg">
+          <Card className="bg-white shadow-lg" id="question-paper-content">
             <CardContent className="p-8">
               {/* Header Section */}
               <div className="text-center mb-8 border-b-2 border-gray-300 pb-6">
@@ -542,6 +594,7 @@ export const QuestionPaperPreview = (): JSX.Element => {
            <Button 
              variant="outline" 
              className="flex-1 flex items-center justify-center gap-2 h-12 border-[#cdd5df] rounded-lg"
+             onClick={handleDownloadPDF}
            >
              <DownloadIcon className="w-5 h-5" />
              <span className="font-text-16-medium font-[number:var(--text-16-medium-font-weight)] text-[#202939] text-[length:var(--text-16-medium-font-size)] tracking-[var(--text-16-medium-letter-spacing)] leading-[var(--text-16-medium-line-height)] [font-style:var(--text-16-medium-font-style)]">
